@@ -1,0 +1,278 @@
+import datetime
+import sys
+import random
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QMainWindow, QApplication, QCompleter, QComboBox, QMessageBox, QDialog
+import mysql.connector
+
+from db import DB
+from control import Ui_miniproject
+
+class MainWindow:
+    def __init__(self):
+        # Initializing main app window
+        self.main_win = QMainWindow()
+        self.main_win.setFixedSize(1020, 750)
+
+        # Adding ui file
+        self.ui = Ui_miniproject()
+        self.ui.setupUi(self.main_win)
+        
+        # DataBase Connection
+        self.con = DB()
+        self.cur = self.con.dbcursor
+        self.ui.stackedWidget.setCurrentWidget(self.ui.opening_page)
+        self.ui.customer.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.customer_page))
+        self.ui.seller.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page))
+        
+        #CUSTOMER PAGE
+        self.ui.submit.clicked.connect(self.check_cust_login)
+        self.ui.view_package_status.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.view_p_status))
+        self.ui.view_packages.clicked.connect(self.customer_view_shipment)
+        self.ui.return_butt.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.customer_page2))
+        self.ui.return_butt_3.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.customer_page2))
+        c_id = self.ui.c_id.text()
+        p_id = self.ui.p_id.text()
+        self.ui.view_status.clicked.connect(self.track_shipment_cust) 
+        
+        #SELLER PAGE 
+        self.ui.submit_2.clicked.connect(self.check_seller_login)
+        self.ui.register_seller.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.widget))
+        self.ui.register_seller_butt.clicked.connect(self.create_seller)
+        self.ui.view_package_status_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.view_p_status_2))
+        self.ui.view_packages_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.view_p_status_2))
+        self.ui.return_butt_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2))
+        self.ui.return_butt_4.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2))
+        self.ui.return_butt_5.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2))
+        self.ui.return_butt_6.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2))
+        self.ui.view_packages_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.previous_packages_2))
+        self.ui.view_customers.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.view_customers_page))
+        self.ui.load_packages.clicked.connect(self.seller_view_shipment)
+        self.ui.load_customers.clicked.connect(self.customers)
+        self.ui.update_status.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.update_package_page))
+        
+        self.ui.update_status_butt.clicked.connect(self.update_status)
+        self.ui.ship_package.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page))
+        self.ui.new_cust.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.create_customer_page))
+        self.ui.existing_cust.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.create_package_page))
+        self.ui.next_butt.clicked.connect(self.create_customer_package)
+        self.ui.create_package_butt.clicked.connect(self.create_package)
+        s_id = self.ui.s_id.text()
+        p_id_2 = self.ui.p_id_2.text()
+        p_id_3 = self.ui.p_id_3.text()
+        stat = self.ui.status.currentText()
+        c_id_2 = self.ui.c_id_2.text()
+        self.ui.view_status_2.clicked.connect(self.track_shipment_sell) 
+        
+        self.ui.home.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.opening_page))
+    
+    #global cid
+    
+    def check_seller_login(self):
+        s_id = self.ui.s_id.text()
+        q=("select s_id from seller")
+        self.cur.execute(q)
+        x=self.cur.fetchall()
+        if(((s_id,) in x)):
+            self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2)
+    
+    def check_cust_login(self):
+        c_id = self.ui.c_id.text()
+        q=("select c_id from customer")
+        self.cur.execute(q)
+        x=self.cur.fetchall()
+        if(((c_id,) in x)):
+            self.ui.stackedWidget.setCurrentWidget(self.ui.customer_page2)
+    
+    def create_seller(self):
+        sid=str(self.randN(10))
+        phoneid = str(self.randN(1))
+        s_name = self.ui.s_name.text()
+        s_email = self.ui.s_email.text()
+        s_phone = self.ui.s_phone.text()
+        s_street = self.ui.s_street.text()
+        s_city = self.ui.s_city.text()
+        s_state = self.ui.s_state.text()
+        s_country = self.ui.s_country.text()
+        s_pin = self.ui.s_pin.text()
+        q=("insert into seller values ('%s','%s','%s')"%(sid,s_name,s_email))
+        self.cur.execute(q)
+        q=("insert into s_address values ('%s','%s','%s','%s','%s','%s')"%(sid,s_street,s_city,s_state,s_country,s_pin))
+        self.cur.execute(q)
+        q=("insert into s_phone values ('%s','%s','%s')"%(sid,phoneid,s_phone))
+        self.cur.execute(q)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page)
+        print(sid)
+        
+    
+    def randN(self,N):
+        min = pow(10, N-1)
+        max = pow(10, N) - 1
+        return random.randint(min, max)
+    
+    def create_customer_package(self):
+        cid=str(self.randN(10))
+        phoneid=str(self.randN(1))
+        f_name= self.ui.f_name.text()
+        l_name= self.ui.l_name.text()
+        email= self.ui.email.text()
+        phone= self.ui.phone.text()
+        apt= self.ui.apt.text()
+        street= self.ui.street.text()
+        city= self.ui.city.text()
+        state= self.ui.state.text()
+        country= self.ui.country.text()
+        pin= int(self.ui.pin.text())
+        #print(cid)
+        q=("insert into customer values ('%s','%s','%s','%s')"%(cid,f_name,l_name,email))
+        self.cur.execute(q)
+        q=("insert into c_address values ('%s','%s','%s','%s','%s','%s','%s')"%(cid,street,apt,city,state,country,pin))
+        self.cur.execute(q)
+        q=("insert into c_phone values ('%s','%s','%s')"%(cid,phoneid,phone))
+        self.cur.execute(q)
+        #self.ui.stackedWidget.setCurrentWidget(self.ui.create_package_page)
+        s_id = self.ui.s_id.text()
+        pid=str(self.randN(10))
+        name= self.ui.p_name_2.text()
+        weight= self.ui.p_weight_2.text()
+        size= self.ui.size_2.currentText()
+        category= self.ui.category_2.currentText()
+        fragile= self.ui.fragile_2.currentText()
+        desc= self.ui.description_2.text()
+        q=("insert into package values ('%s','%s','%s','%s','%s','%s','%s')"%(pid,name,weight,size,category,fragile,desc))
+        self.cur.execute(q)
+        q=("select name from seller where s_id='%s'"%s_id)
+        self.cur.execute(q)
+        x=self.cur.fetchall()
+        for i in x[0]:
+            sname=i
+        
+        q=("insert into orders_from values ('%s','%s','%s','%s','%s')"%(cid,f_name,s_id,sname,pid))
+        self.cur.execute(q)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2)
+    
+    def create_package(self):
+        s_id = self.ui.s_id.text()
+        c_id_2 = self.ui.c_id_2.text()
+        pid=str(self.randN(10))
+        name= self.ui.p_name.text()
+        weight= self.ui.p_weight.text()
+        size= self.ui.size.currentText()
+        category= self.ui.category.currentText()
+        fragile= self.ui.fragile.currentText()
+        desc= self.ui.description.text()
+        q=("insert into package values ('%s','%s','%s','%s','%s','%s','%s')"%(pid,name,weight,size,category,fragile,desc))
+        self.cur.execute(q)
+        q=("select name from seller where s_id='%s'"%s_id)
+        self.cur.execute(q)
+        x=self.cur.fetchall()
+        for i in x[0]:
+            sname=i
+        q=("select f_name from customer where c_id='%s'"%c_id_2)
+        self.cur.execute(q)
+        x=self.cur.fetchall()
+        for i in x[0]:
+            cname=i
+        q=("insert into orders_from values ('%s','%s','%s','%s','%s')"%(c_id_2,cname,s_id,sname,pid))
+        self.cur.execute(q)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.seller_page2)
+    
+    def create_customer(self):
+        cid=str(self.randN(10))
+        phoneid=str(self.randN(1))
+        f_name= self.ui.f_name.text()
+        l_name= self.ui.l_name.text()
+        email= self.ui.email.text()
+        phone= self.ui.phone.text()
+        apt= self.ui.apt.text()
+        street= self.ui.street.text()
+        city= self.ui.city.text()
+        state= self.ui.state.text()
+        country= self.ui.country.text()
+        pin= int(self.ui.pin.text())
+        #print(cid)
+        q=("insert into customer values ('%s','%s','%s','%s')"%(cid,f_name,l_name,email))
+        self.cur.execute(q)
+        q=("insert into c_address values ('%s','%s','%s','%s','%s','%s','%s')"%(cid,street,apt,city,state,country,pin))
+        self.cur.execute(q)
+        q=("insert into c_phone values ('%s','%s','%s')"%(cid,phoneid,phone))
+        self.cur.execute(q)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.create_package_page)
+    
+    
+    def update_status(self):
+        p_id_3 = self.ui.p_id_3.text()
+        stat = self.ui.status.currentText()
+        q=("update ships set status='%s' where p_id='%s'"%(stat,p_id_3))
+        self.cur.execute(q)
+    
+    def customers(self):
+        s_id = self.ui.s_id.text()
+        q = ("select c.c_id,c.f_name, o.p_id,s.order_date from customer c, orders_from o, ships s where c.c_id=o.c_id and o.p_id=s.p_id and o.s_id=s.S_ID and o.s_id=%s" %s_id)
+        self.cur.execute(q)
+        result=self.cur.fetchall()
+        self.ui.customer_table.setRowCount(len(result)) 
+        for row_number, row_data in enumerate(result): 
+            self.ui.customer_table.insertRow(row_number) 
+            for column_number, data in enumerate(row_data): 
+                self.ui.customer_table.setItem(row_number, column_number, QtWidgets.QTableWidgetItem(str(data)))
+    
+    def seller_view_shipment(self):
+        s_id = self.ui.s_id.text()
+        q = ("select distinct(o.p_id), p.p_name,o.c_id, c.f_name as name, order_date, status from orders_from o, ships s, package p, customer c where o.s_id=%s and o.s_id=s.s_id and o.p_id=s.p_id and p.p_id=o.p_id and o.c_id=c.c_id" %s_id)
+        self.cur.execute(q)
+        result=self.cur.fetchall()
+        self.ui.prev_shipment_cust_2.setRowCount(len(result)) 
+        for row_number, row_data in enumerate(result): 
+            self.ui.prev_shipment_cust_2.insertRow(row_number) 
+            for column_number, data in enumerate(row_data): 
+                self.ui.prev_shipment_cust_2.setItem(row_number, column_number, QtWidgets.QTableWidgetItem(str(data)))
+    
+    def track_shipment_sell(self):
+        p_id_2 = self.ui.p_id_2.text()
+        #self.cur.callproc('track_shipment_seller()',p_id_2)
+        q = ("select ships.P_ID,c_id,order_date,ship_date,status from ships, orders_from where ships.p_id=%s and ships.p_id=orders_from.p_id" %p_id_2)
+        self.cur.execute(q)
+        result=self.cur.fetchall()
+        self.ui.status_table_2.setRowCount(len(result)) 
+        for row_number, row_data in enumerate(result): 
+            self.ui.status_table_2.insertRow(row_number) 
+            for column_number, data in enumerate(row_data): 
+                self.ui.status_table_2.setItem(row_number, column_number, QtWidgets.QTableWidgetItem(str(data)))
+        
+    def customer_view_shipment(self):
+        self.ui.stackedWidget.setCurrentWidget(self.ui.previous_packages)
+        c_id = self.ui.c_id.text()
+        q = ("select distinct(o.p_id), p.p_name, s.s_id, seller.name, order_date,status,p.description from orders_from o, ships s, package p, seller where o.c_id='%s' and o.p_id=s.p_id and o.s_id=s.s_id and o.p_id=p.p_id and seller.s_id=o.s_id and s.p_id=p.p_id" %c_id)
+        self.cur.execute(q)
+        result=self.cur.fetchall()
+        self.ui.prev_shipment_cust.setRowCount(len(result)) 
+        for row_number, row_data in enumerate(result): 
+            self.ui.prev_shipment_cust.insertRow(row_number) 
+            for column_number, data in enumerate(row_data): 
+                self.ui.prev_shipment_cust.setItem(row_number, column_number, QtWidgets.QTableWidgetItem(str(data)))
+    
+    def track_shipment_cust(self):
+        p_id = self.ui.p_id.text()
+        q = ("select ships.P_ID,s_id,order_date,ship_date,status from ships,package where ships.p_id='%s'" %p_id)
+        self.cur.execute(q)
+        result=self.cur.fetchall()
+        self.ui.status_table.setRowCount(len(result)) 
+        for row_number, row_data in enumerate(result): 
+            self.ui.status_table.insertRow(row_number) 
+            for column_number, data in enumerate(row_data): 
+                self.ui.status_table.setItem(row_number, column_number, QtWidgets.QTableWidgetItem(str(data)))
+        
+        
+if __name__ == '__main__':
+    try:
+        app = QApplication(sys.argv)
+        main_win = MainWindow()
+        main_win.main_win.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(e)
+
+
