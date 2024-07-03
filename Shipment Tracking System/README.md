@@ -3,10 +3,12 @@ From factories to storage units to customers’ doorstep, tons of packages are s
 
 ## Objectives
 Customer:
+
 •	Track shipment
 •	View previous shipment details (if any)
 
 Seller:
+
 •	Input customer, package details
 •	Update shipment details
 •	Track shipment
