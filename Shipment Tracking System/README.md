@@ -5,13 +5,18 @@ From factories to storage units to customers’ doorstep, tons of packages are s
 Customer:
 
 •	Track shipment
+
 •	View previous shipment details (if any)
 
 Seller:
 
 •	Input customer, package details
+
 •	Update shipment details
+
 •	Track shipment
+
 •	View past customers 
+
 •	View past packages
 
