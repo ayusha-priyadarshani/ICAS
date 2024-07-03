@@ -3,6 +3,7 @@ The attorney general's office has requested us to develop a Judiciary Informatio
 For this the registrar expects the computer to display the vacant slots on any working day during which the case can be scheduled. Each time a case is adjourned, the reason for adjournment is entered by the registrar and he assigns a new hearing date. If hearing takes place on any day for a case, the registrar enters the summary of the court proceedings and assigns a new hearing date. Also, on completion of a court case, the summary of the judgment is recorded and the case is closed but the details of the case are maintained for future reference. Other date maintained about a case includes the name of the presiding judge, the public prosecutor, the starting date, and the expected completion date of a trial. The judges should be able to browse through the old cases for guidance on their judgment. The lawyers should also be permitted to browse old cases, but should be charged for each old case they browse.
 
 Using the JIS software, the Registrar of the court should be able to query the following:
+
 (a) The currently pending court cases.
 In response to this, query, the computer should print out the pending cases sorted by CIN. For each pending case, the following data should be listed: the date in which the case started the defendant's name, address, crime details, the lawyer's name, the public prosecutor's name, and the attending judge's name.
 
