@@ -9,6 +9,7 @@ Customer:
 •	View previous shipment details (if any)
 
 
+
 Seller:
 
 •	Input customer, package details
